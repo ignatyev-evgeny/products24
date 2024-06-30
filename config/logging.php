@@ -52,6 +52,12 @@ return [
 
     'channels' => [
 
+        'requestFromBitrix' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/'.date('d.m.Y').'/requestFromBitrix.log'),
+            'level' => 'info',
+        ],
+
         'stack' => [
             'driver' => 'stack',
             'channels' => explode(',', env('LOG_STACK', 'single')),
