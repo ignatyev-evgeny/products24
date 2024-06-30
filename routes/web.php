@@ -1,8 +1,15 @@
 <?php
 
+use App\Http\Controllers\Integration\ProductController;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
-Route::any('/', function () {
-    return view('welcome');
-})->withoutMiddleware([VerifyCsrfToken::class]);
+Route::any('/', [ProductController::class, 'index'])
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->name('index');
+
+Route::get('/products/{integration}', [ProductController::class, 'getProducts'])
+    ->withoutMiddleware([VerifyCsrfToken::class])
+    ->middleware(['CacheResponse'])
+    ->name('getProducts');
+
