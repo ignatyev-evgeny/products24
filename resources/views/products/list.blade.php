@@ -70,17 +70,17 @@
                 var count = $('#count_'+productId).val();
 
                 if (typeof count === 'undefined' || count === null || count === '') {
-                    alert(__("Не указано количество продукции"))
+                    alert("{{ __("Не указано количество продукции") }}")
                     return false;
                 }
 
                 if (typeof productId === 'undefined' || productId === null || productId === '') {
-                    alert(__("Не указан идентификатор товарной позиции"))
+                    alert("{{ __("Не указан идентификатор товарной позиции") }}")
                     return false;
                 }
 
                 if (typeof dealId === 'undefined' || dealId === null || dealId === '') {
-                    alert(__("Не указан идентификатор сделки"))
+                    alert("{{ __("Не указан идентификатор сделки") }}")
                     return false;
                 }
 
@@ -102,7 +102,7 @@
                         return false;
                     }
                     button.removeClass("disabled").removeClass("btn-danger").addClass("btn-success").html("Добавить");
-                    alert(__("Товар успешно добавлен"));
+                    alert("{{ __("Товар успешно добавлен") }}");
                 });
 
             }
