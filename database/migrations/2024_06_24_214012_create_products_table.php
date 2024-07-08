@@ -23,7 +23,7 @@ return new class extends Migration {
             $table->string('created_by')->nullable();
             $table->string('catalog_id')->nullable();
             $table->string('section_id')->nullable();
-            $table->string('description')->nullable();
+            $table->longText('description')->nullable();
             $table->string('description_type')->nullable();
             $table->string('price')->nullable();
             $table->string('currency_id')->nullable();
