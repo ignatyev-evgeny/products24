@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Integration;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deals;
 use App\Models\Integration;
 use App\Models\Product;
 use App\Models\ProductField;
+use App\Models\ProductItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -16,52 +18,63 @@ class ProductController extends Controller {
     public function index(Request $request)
     {
 
-        if(empty(json_decode($request->PLACEMENT_OPTIONS)->ID)) {
-            return view('errorPage', [
-                'error' => __("Идентификатор сделки не передан"),
-                'errors' => []
-            ]);
-        }
+        if(empty($request->deal) && empty($request->integration)) {
 
-        $dealId = json_decode($request->PLACEMENT_OPTIONS)->ID;
+            if(empty(json_decode($request->PLACEMENT_OPTIONS)->ID)) {
+                return view('errorPage', [
+                    'error' => __("Идентификатор сделки не передан"),
+                    'errors' => []
+                ]);
+            }
 
-        $urlString = '';
-        foreach ($request->all() as $key => $value) {
-            $urlString .= $key . '=' . $value."&";
-        }
+            $dealId = json_decode($request->PLACEMENT_OPTIONS)->ID;
 
-        Log::channel('requestFromBitrix')->info("https://ooomts.home/?".$urlString);
+            $urlString = '';
+            foreach ($request->all() as $key => $value) {
+                $urlString .= $key . '=' . $value."&";
+            }
 
-        $rules = [
-            'DOMAIN' => 'required|string',
-            'AUTH_ID' => 'required|string',
-            'REFRESH_ID' => 'required|string',
-            'AUTH_EXPIRES' => 'required|integer',
-            'LANG' => 'required|string',
-        ];
+            Log::channel('requestFromBitrix')->info("https://ooomts.home/?".$urlString);
 
-        $validator = Validator::make($request->all(), $rules);
+            $rules = [
+                'DOMAIN' => 'required|string',
+                'AUTH_ID' => 'required|string',
+                'REFRESH_ID' => 'required|string',
+                'AUTH_EXPIRES' => 'required|integer',
+                'LANG' => 'required|string',
+            ];
 
-        if ($validator->fails()) {
-            return view('errorPage', [
-                'error' => __("Ошибка валидации"),
-                'errors' => $validator->errors()
-            ]);
-        }
+            $validator = Validator::make($request->all(), $rules);
 
-        $validatedData = $validator->validated();
+            if ($validator->fails()) {
+                return view('errorPage', [
+                    'error' => __("Ошибка валидации"),
+                    'errors' => $validator->errors()
+                ]);
+            }
 
-        if(!self::checkInstall($validatedData)) {
-            self::install($validatedData);
-        }
+            $validatedData = $validator->validated();
 
-        $integration = Integration::where('domain', $validatedData['DOMAIN'])->first();
+            if(!self::checkInstall($validatedData)) {
+                self::install($validatedData);
+            }
 
+            $integration = Integration::where('domain', $validatedData['DOMAIN'])->first();
 
-        if(!self::refreshIntegration($integration, $validatedData)) {
-            return Controller::failResponse([
-                "message" => __("Ошибка при обновление токена портала $integration->domain")
-            ]);
+            if(!self::refreshIntegration($integration, $validatedData)) {
+                return Controller::failResponse([
+                    "message" => __("Ошибка при обновление токена портала $integration->domain")
+                ]);
+            }
+
+        } else {
+            $integration = Integration::find($request->integration);
+            if(empty($integration)) {
+                return Controller::failResponse([
+                    "message" => __("Интеграция не найдена")
+                ]);
+            }
+            $dealId = $request->deal;
         }
 
         $updateCatalogList = self::catalogList($integration);
@@ -80,16 +93,7 @@ class ProductController extends Controller {
             }
         }
 
-        if(Product::where('integration', $integration->id)->count() == 0) {
-            $updateProductList = self::productFields($integration);
-            if(! $updateProductList['success']) {
-                return Controller::failResponse([
-                    'message' => $updateProductList['message']
-                ]);
-            }
-        }
-
-        return view('products.list', [
+        return view('products.productItem', [
             'integration' => $integration,
             'dealId' => $dealId,
             'fields' => self::getProductFilteredFields($integration),
@@ -97,7 +101,15 @@ class ProductController extends Controller {
 
     }
 
-    public function getProducts(Integration $integration, Request $request) {
+    public function productList(Integration $integration, int $deal) {
+        return view('products.list', [
+            'integration' => $integration,
+            'dealId' => $deal,
+            'fields' => self::getProductFilteredFields($integration),
+        ]);
+    }
+
+    public function getProduct(Integration $integration, Request $request) {
 
         if(empty($request->dealId)) {
             return response()->json([
@@ -111,7 +123,7 @@ class ProductController extends Controller {
 
         return DataTables::of($products)
             ->addColumn('action', function($row) use ($request) {
-                return "<input type='number' min='1' step='1' class='text-center' placeholder='Колличество' id='count_$row->bitrix_id'><br><a onclick='addProductToDeal($row->bitrix_id, $request->dealId)' id='button_add_product_$row->bitrix_id' class='btn btn-success btn-sm w-100 mt-1'>Добавить</bra>";
+                return "<input type='number' min='0.01' step='0.01' class='text-center' placeholder='Стоимость' id='price_$row->bitrix_id'><br><input type='number' min='1' step='1' class='text-center' placeholder='Колличество' id='count_$row->bitrix_id'><br><a onclick='addProductToDeal($row->bitrix_id, $request->dealId)' id='button_add_product_$row->bitrix_id' class='btn btn-success btn-sm w-100 mt-1'>Добавить</bra>";
             })
             ->addColumn('fields', function($row) use ($allowedFields) {
                 $fields = [];
@@ -140,6 +152,78 @@ class ProductController extends Controller {
             ->removeColumn('price')
             ->removeColumn('id')
             ->rawColumns(['action'])
+            ->make(true);
+    }
+
+    public function getProductItem(Integration $integration, Request $request) {
+
+        if(empty($request->dealId)) {
+            return response()->json([
+                'success' => false,
+                'message' => __("Идентификатор сделки не передан")
+            ], 400);
+        }
+
+        $deal = Deals::where('bitrix_id', $request->dealId)->first();
+
+        if(empty($deal->company_id)) {
+            return response()->json([
+                'success' => false,
+                'message' => __("Компания указанная в сделке не найдена")
+            ], 400);
+        }
+
+        $productItem = ProductItem::query()->select('integration_id', 'company_id', 'deal_id', 'bitrix_id', 'productId', 'productName', 'price', 'priceAccount', 'priceExclusive', 'priceNetto', 'priceBrutto', 'quantity', 'discountTypeId', 'discountRate', 'discountSum', 'taxRate', 'taxIncluded', 'customized', 'measureCode', 'measureName', 'type')
+            ->where('integration_id', $integration->id)
+            ->where('company_id', $deal->company_id)
+            ->orderBy('deal_id', 'DESC');
+
+        return DataTables::of($productItem)
+            ->addColumn('action', function($row) use ($request) {
+                return "<input type='number' min='0.01' step='0.01' class='text-center' value='{$row->priceBrutto}' placeholder='Стоимость' id='price_$row->bitrix_id'><br><input type='number' min='1' step='1' class='text-center mt-1' placeholder='Колличество' id='count_$row->bitrix_id' value='{$row->quantity}'><br><a onclick='addProductItemToDeal($row->bitrix_id, $row->productId, $request->dealId)' id='button_add_product_$row->bitrix_id' class='btn btn-success btn-sm w-100 mt-1'>Добавить</bra>";
+            })->addColumn('total', function($row) use ($request) {
+                return number_format(subtractPercentage($row->priceBrutto, $row->discountRate) * $row->quantity, 2, ',', ' ')." RUB";
+            })
+            ->addColumn('amount', function($row) use ($request) {
+                return number_format($row->priceBrutto, 2, ',', ' ')." RUB";
+            })
+            ->addColumn('tax', function($row) use ($request) {
+                return $row->taxRate."%";
+            })
+            ->addColumn('deal', function($row) use ($request) {
+                return "<a target='_blank' href='https://ooomts.bitrix24.ru/crm/deal/details/{$row->deal_id}/'>{$row->deal_id}</a>";
+            })
+            ->addColumn('discount', function($row) use ($request) {
+                return $row->discountRate."%";
+            })
+            ->filter(function ($query) use ($request) {
+                if ($request->has('search') && $request->search['value']) {
+                    $searchValue = $request->search['value'];
+                    $query->where(function ($query) use ($searchValue) {
+                        $query->where('productName', 'like', "%{$searchValue}%")
+                            ->orWhere('deal_id', 'like', "%{$searchValue}%");
+                    });
+                }
+            })
+            ->removeColumn('deal_id')
+            ->removeColumn('bitrix_id')
+            ->removeColumn('company_id')
+            ->removeColumn('customized')
+            ->removeColumn('discountRate')
+            ->removeColumn('discountTypeId')
+            ->removeColumn('integration_id')
+            ->removeColumn('measureCode')
+            ->removeColumn('measureName')
+            ->removeColumn('priceAccount')
+            ->removeColumn('priceBrutto')
+            ->removeColumn('priceExclusive')
+            ->removeColumn('priceNetto')
+            ->removeColumn('productId')
+            ->removeColumn('taxIncluded')
+            ->removeColumn('taxRate')
+            ->removeColumn('type')
+            ->removeColumn('price')
+            ->rawColumns(['action', 'total', 'tax', 'amount', 'discount', 'deal'])
             ->make(true);
     }
 
