@@ -52,6 +52,18 @@ return [
 
     'channels' => [
 
+        'UpdateProductList' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/'.date('d.m.Y').'/UpdateProductList.log'),
+            'level' => 'info',
+        ],
+
+        'UpdateDealList' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/'.date('d.m.Y').'/UpdateDealList.log'),
+            'level' => 'info',
+        ],
+
         'requestFromBitrix' => [
             'driver' => 'single',
             'path' => storage_path('logs/'.date('d.m.Y').'/requestFromBitrix.log'),
