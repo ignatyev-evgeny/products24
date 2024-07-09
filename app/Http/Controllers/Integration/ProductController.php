@@ -201,10 +201,10 @@ class ProductController extends Controller {
                 return $row->taxRate."%";
             })
             ->addColumn('article', function($row) use ($request) {
-                return $row->taxRate."%";
+                return $row->article;
             })
             ->addColumn('analogs', function($row) use ($request) {
-                return $row->taxRate."%";
+                return $row->analogs;
             })
             ->addColumn('deal', function($row) use ($request) {
                 return "<a target='_blank' href='https://ooomts.bitrix24.ru/crm/deal/details/{$row->deal_id}/'>{$row->deal_id}</a>";
@@ -217,7 +217,9 @@ class ProductController extends Controller {
                     $searchValue = $request->search['value'];
                     $query->where(function ($query) use ($searchValue) {
                         $query->where('productName', 'like', "%{$searchValue}%")
-                            ->orWhere('deal_id', 'like', "%{$searchValue}%");
+                            ->orWhere('deal_id', 'like', "%{$searchValue}%")
+                            ->orWhere('article', 'like', "%{$searchValue}%")
+                            ->orWhere('analogs', 'like', "%{$searchValue}%");
                     });
                 }
             })
