@@ -179,7 +179,7 @@ class ProductController extends Controller {
         if(empty($company)) {
             return response()->json([
                 'success' => false,
-                'message' => __("Компания указанная в сделке не найдена")
+                'message' => __("Компания - ".$dealInfo->object()->result->COMPANY_ID." - указанная в сделке не найдена")
             ], 400);
         }
 
