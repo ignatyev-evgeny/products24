@@ -183,7 +183,7 @@ class ProductController extends Controller {
             ], 400);
         }
 
-        $productItem = ProductItem::query()->select('integration_id', 'company_id', 'deal_id', 'bitrix_id', 'productId', 'productName', 'price', 'priceAccount', 'priceExclusive', 'priceNetto', 'priceBrutto', 'quantity', 'discountTypeId', 'discountRate', 'discountSum', 'taxRate', 'taxIncluded', 'customized', 'measureCode', 'measureName', 'type')
+        $productItem = ProductItem::query()->select('integration_id', 'company_id', 'deal_id', 'bitrix_id', 'productId', 'productName', 'article', 'analogs', 'price', 'priceAccount', 'priceExclusive', 'priceNetto', 'priceBrutto', 'quantity', 'discountTypeId', 'discountRate', 'discountSum', 'taxRate', 'taxIncluded', 'customized', 'measureCode', 'measureName', 'type')
             ->where('integration_id', $integration->id)
             ->where('company_id', $company->bitrix_id)
             ->orderBy('deal_id', 'DESC');
