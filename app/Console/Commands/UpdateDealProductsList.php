@@ -48,7 +48,7 @@ class UpdateDealProductsList extends Command
 
                 $this->log($counter." - Синхронизация товарных позиций сделки - ".$deal->bitrix_id);
 
-                sleep(1);
+                sleep(2);;
                 $dealProductItemList = Http::get("https://$integration->domain/rest/crm.item.productrow.list?auth=$integration->auth_id&filter[%3DownerType]=D&filter[%3DownerId]=".$deal->bitrix_id);
 
                 if($dealProductItemList->status() != 200 || empty($dealProductItemList->object()->result)) {
@@ -71,7 +71,7 @@ class UpdateDealProductsList extends Command
                         continue;
                     }
 
-                    sleep(1);
+                    sleep(2);;
                     $productVariation = Http::get("https://$integration->domain/rest/catalog.product.offer.get?auth=$integration->auth_id&id=".$productRow->productId);
 
                     if($productVariation->status() != 200 || empty($productVariation->object()->result)) {
@@ -87,7 +87,7 @@ class UpdateDealProductsList extends Command
                         continue;
                     }
 
-                    sleep(1);
+                    sleep(2);;
                     $productDetail = Http::get("https://$integration->domain/rest/crm.product.get?auth=$integration->auth_id&id=".$productVariation->offer->parentId->value);
 
                     if($productDetail->status() != 200 || empty($productDetail->object()->result)) {
@@ -170,7 +170,7 @@ class UpdateDealProductsList extends Command
                 $this->log($counter." - Синхронизация товарных позиций сделки - ".$deal->bitrix_id.". Прошла успешно.");
                 $counter++;
             }
-            sleep(1);
+            sleep(2);;
         }
 
     }
