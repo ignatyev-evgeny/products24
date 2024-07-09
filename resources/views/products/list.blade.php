@@ -21,7 +21,20 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-body">
-                                <table id="productsTable" class="table table-striped table-bordered ">
+                                <div class="row">
+                                    <div class="col-4">
+                                        <a href="{{ route('index', ['integration' => $integration->id, 'deal' => $dealId]) }}">
+                                            <button type="button" class="btn btn-primary  w-100">Товарные позиции</button>
+                                        </a>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-primary disabled w-100">Товары</button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-danger w-100 disabled">Настройки</button>
+                                    </div>
+                                </div>
+                                <table id="productsTable" class="table table-striped table-bordered mt-3">
                                     <thead>
                                         <tr>
                                             @foreach($fields as $field)
@@ -45,7 +58,7 @@
                 });
 
                 $('#productsTable').DataTable({
-                    ajax: '/products/{{ $integration->id }}?dealId={{ $dealId }}',
+                    ajax: '/product/{{ $integration->id }}?dealId={{ $dealId }}',
                     columns: [
                         { data: 'name', sortable: false, className: 'dt-left align-middle' },
                         { data: 'fields.PROPERTY_109.value', className: 'align-middle', sortable: false, width: "250px" },
@@ -54,7 +67,7 @@
                     ],
                     processing: false,
                     serverSide: true,
-                    pageLength: 10,
+                    pageLength: 100,
                     language: {
                         url: "//cdn.datatables.net/plug-ins/1.10.24/i18n/Russian.json"
                     },
@@ -68,9 +81,15 @@
 
             function addProductToDeal(productId, dealId) {
                 var count = $('#count_'+productId).val();
+                var price = $('#price_'+productItemId).val();
 
                 if (typeof count === 'undefined' || count === null || count === '') {
                     alert("{{ __("Не указано количество продукции") }}")
+                    return false;
+                }
+
+                if (typeof price === 'undefined' || price === null || price === '') {
+                    alert("{{ __("Не указана стоимость продукции") }}")
                     return false;
                 }
 
@@ -93,7 +112,7 @@
                         "ownerId": dealId,
                         "ownerType": "D",
                         "productId": productId,
-                        "price": 0,
+                        "price": price,
                         "quantity": count
                     }
                 }, function(result) {
