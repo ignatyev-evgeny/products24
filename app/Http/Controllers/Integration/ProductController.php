@@ -78,21 +78,21 @@ class ProductController extends Controller {
             $dealId = $request->deal;
         }
 
-        $updateCatalogList = self::catalogList($integration);
-        if(! $updateCatalogList['success']) {
-            return Controller::failResponse([
-                'message' => $updateCatalogList['message']
-            ]);
-        }
-
-        if(ProductField::where('integration', $integration->id)->count() == 0) {
-            $updateProductFields = self::productFields($integration);
-            if(! $updateProductFields['success']) {
-                return Controller::failResponse([
-                    'message' => $updateProductFields['message']
-                ]);
-            }
-        }
+//        $updateCatalogList = self::catalogList($integration);
+//        if(! $updateCatalogList['success']) {
+//            return Controller::failResponse([
+//                'message' => $updateCatalogList['message']
+//            ]);
+//        }
+//
+//        if(ProductField::where('integration', $integration->id)->count() == 0) {
+//            $updateProductFields = self::productFields($integration);
+//            if(! $updateProductFields['success']) {
+//                return Controller::failResponse([
+//                    'message' => $updateProductFields['message']
+//                ]);
+//            }
+//        }
 
         return view('products.productItem', [
             'integration' => $integration,
