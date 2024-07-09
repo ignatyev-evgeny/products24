@@ -200,6 +200,12 @@ class ProductController extends Controller {
             ->addColumn('tax', function($row) use ($request) {
                 return $row->taxRate."%";
             })
+            ->addColumn('article', function($row) use ($request) {
+                return $row->taxRate."%";
+            })
+            ->addColumn('analogs', function($row) use ($request) {
+                return $row->taxRate."%";
+            })
             ->addColumn('deal', function($row) use ($request) {
                 return "<a target='_blank' href='https://ooomts.bitrix24.ru/crm/deal/details/{$row->deal_id}/'>{$row->deal_id}</a>";
             })
@@ -233,7 +239,7 @@ class ProductController extends Controller {
             ->removeColumn('taxRate')
             ->removeColumn('type')
             ->removeColumn('price')
-            ->rawColumns(['action', 'total', 'tax', 'amount', 'discount', 'deal'])
+            ->rawColumns(['action', 'total', 'tax', 'amount', 'discount', 'deal', 'article', 'analogs'])
             ->make(true);
     }
 

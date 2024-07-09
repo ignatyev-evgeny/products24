@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class ProductItem extends Model {
     public $timestamps = false;
 
+    protected $primaryKey = 'bitrix_id';
+
     protected $fillable = [
         'integration_id',
         'company_id',
@@ -14,6 +16,8 @@ class ProductItem extends Model {
         'bitrix_id',
         'productId',
         'productName',
+        'article',
+        'analogs',
         'price',
         'priceAccount',
         'priceExclusive',

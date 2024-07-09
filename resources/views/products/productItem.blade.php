@@ -38,6 +38,8 @@
                                 <tr>
                                     <th class="text-center">{{ __("Сделка") }}</th>
                                     <th class="text-center">{{ __("Наименование") }}</th>
+                                    <th class="text-center">{{ __("Артикул") }}</th>
+                                    <th class="text-center">{{ __("Аналоги") }}</th>
                                     <th class="text-center">{{ __("Стоимость") }}</th>
                                     <th class="text-center">{{ __("Кол-во") }}</th>
                                     <th class="text-center">{{ __("Скидка") }}</th>
@@ -65,6 +67,8 @@
             columns: [
                 { data: 'deal', sortable: false, className: 'align-middle', width: "100px" },
                 { data: 'productName', sortable: false, className: 'dt-left align-middle' },
+                { data: 'article', sortable: false, className: 'dt-left align-middle' },
+                { data: 'analogs', sortable: false, className: 'dt-left align-middle' },
                 { data: 'amount', className: 'align-middle', sortable: false, width: "150px" },
                 { data: 'quantity', className: 'align-middle', sortable: false, width: "100px" },
                 { data: 'discount', className: 'align-middle', sortable: false },
