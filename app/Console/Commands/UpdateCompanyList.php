@@ -14,7 +14,7 @@ class UpdateCompanyList extends Command
      *
      * @var string
      */
-    protected $signature = 'product:update-company-list {integration}';
+    protected $signature = 'product:update-company-list';
 
     /**
      * The console command description.
@@ -33,48 +33,45 @@ class UpdateCompanyList extends Command
      */
     public function handle()
     {
-        $integration = Integration::find($this->argument('integration'));
 
-        if(empty($integration)) {
-            $this->errorMessage("Интеграция не найдена");
-            return false;
-        }
+        foreach(Integration::all() as $integration) {
 
-        $counter = 1;
+            $counter = 1;
 
-        $start = 0;
+            $start = 0;
 
+            do {
 
-        do {
+                $companyList = Http::get("https://$integration->domain/rest/crm.company.list?auth=$integration->auth_id&start=$start&select[]=ID&select[]=COMPANY_TYPE&select[]=TITLE");
 
-            $companyList = Http::get("https://$integration->domain/rest/crm.company.list?auth=$integration->auth_id&start=$start&select[]=ID&select[]=COMPANY_TYPE&select[]=TITLE");
-
-            if($companyList->status() != 200 || empty($companyList->object()->result)) {
-                $this->errorMessage("Ошибка соединения с порталом - ".$companyList->status());
-                return false;
-            }
-
-            foreach ($companyList->object()->result as $company) {
-
-                $localCompany = Company::firstOrCreate([
-                    'integration_id' => $integration->id,
-                    'bitrix_id' => $company->ID,
-                    'title' => $company->TITLE,
-                    'type' => $company->COMPANY_TYPE,
-                ]);
-
-                if ($localCompany->wasRecentlyCreated) {
-                    $this->log($counter." - Успешно создана - ".$company->ID." - ".$localCompany->bitrix_id);
-                } else {
-                    $this->log($counter." - Уже существует - ".$company->ID." - ".$localCompany->bitrix_id);
+                if($companyList->status() != 200 || empty($companyList->object()->result)) {
+                    $this->errorMessage("Ошибка соединения с порталом - ".$companyList->status());
+                    return false;
                 }
 
-                $counter++;
-            }
+                foreach ($companyList->object()->result as $company) {
 
-            $start = isset($companyList->object()->next) ? $companyList->object()->next : null;
+                    $localCompany = Company::firstOrCreate([
+                        'integration_id' => $integration->id,
+                        'bitrix_id' => $company->ID,
+                        'title' => $company->TITLE,
+                        'type' => $company->COMPANY_TYPE,
+                    ]);
 
-        } while (isset($companyList->object()->next));
+                    if ($localCompany->wasRecentlyCreated) {
+                        $this->log($counter." - Успешно создана - ".$company->ID." - ".$localCompany->bitrix_id);
+                    } else {
+                        $this->log($counter." - Уже существует - ".$company->ID." - ".$localCompany->bitrix_id);
+                    }
+
+                    $counter++;
+                }
+
+                $start = isset($companyList->object()->next) ? $companyList->object()->next : null;
+
+            } while (isset($companyList->object()->next));
+
+        }
 
     }
 

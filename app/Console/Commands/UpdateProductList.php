@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Http\Controllers\Controller;
 use App\Models\Integration;
 use App\Models\Product;
 use App\Models\ProductField;
@@ -17,7 +16,7 @@ class UpdateProductList extends Command
      *
      * @var string
      */
-    protected $signature = 'product:update-product-list {integration}';
+    protected $signature = 'product:update-product-list';
 
     /**
      * The console command description.
@@ -36,128 +35,123 @@ class UpdateProductList extends Command
      */
     public function handle()
     {
-        $integration = Integration::find($this->argument('integration'));
 
-        if(empty($integration)) {
-            $this->errorMessage("Интеграция не найдена");
-            return false;
-        }
+        foreach(Integration::all() as $integration) {
+            $counter = 1;
 
-        $counter = 1;
+            foreach ($integration->catalogs as $catalog) {
 
-        foreach ($integration->catalogs as $catalog) {
+                $start = 0;
 
-            $start = 0;
+                do {
 
-            do {
+                    $productList = Http::asJson()->post("https://$integration->domain/rest/crm.product.list?auth=$integration->auth_id&start=$start", [
+                        'select' => [
+                            "ID",
+                            "NAME",
+                            "CODE",
+                            "ACTIVE",
+                            "PREVIEW_PICTURE",
+                            "DETAIL_PICTURE",
+                            "SORT",
+                            "XML_ID",
+                            "TIMESTAMP_X",
+                            "DATE_CREATE",
+                            "MODIFIED_BY",
+                            "CREATED_BY",
+                            "CATALOG_ID",
+                            "SECTION_ID",
+                            "DESCRIPTION",
+                            "DESCRIPTION_TYPE",
+                            "PRICE",
+                            "CURRENCY_ID",
+                            "VAT_ID",
+                            "VAT_INCLUDED",
+                            "MEASURE",
+                            'PROPERTY_*',
+                        ],
+                        'filter' => [
+                            'CATALOG_ID' => $catalog
+                        ]
+                    ]);
 
-                $productList = Http::asJson()->post("https://$integration->domain/rest/crm.product.list?auth=$integration->auth_id&start=$start", [
-                    'select' => [
-                        "ID",
-                        "NAME",
-                        "CODE",
-                        "ACTIVE",
-                        "PREVIEW_PICTURE",
-                        "DETAIL_PICTURE",
-                        "SORT",
-                        "XML_ID",
-                        "TIMESTAMP_X",
-                        "DATE_CREATE",
-                        "MODIFIED_BY",
-                        "CREATED_BY",
-                        "CATALOG_ID",
-                        "SECTION_ID",
-                        "DESCRIPTION",
-                        "DESCRIPTION_TYPE",
-                        "PRICE",
-                        "CURRENCY_ID",
-                        "VAT_ID",
-                        "VAT_INCLUDED",
-                        "MEASURE",
-                        'PROPERTY_*',
-                    ],
-                    'filter' => [
-                        'CATALOG_ID' => $catalog
-                    ]
-                ]);
+                    if($productList->status() != 200 || empty($productList->object()->result)) {
+                        $this->errorMessage("Ошибка соединения с порталом - ".$productList->status());
+                        return false;
+                    }
 
-                if($productList->status() != 200 || empty($productList->object()->result)) {
-                    $this->errorMessage("Ошибка соединения с порталом - ".$productList->status());
-                    return false;
-                }
+                    $productFields = collect(ProductField::where('integration', $integration->id)->get()->toArray());
 
-                $productFields = collect(ProductField::where('integration', $integration->id)->get()->toArray());
+                    foreach ($productList->object()->result as $product) {
 
-                foreach ($productList->object()->result as $product) {
+                        $fields = [];
 
-                    $fields = [];
+                        foreach ($product as $key => $value) {
 
-                    foreach ($product as $key => $value) {
+                            if(Str::contains($key, 'PROPERTY_')) {
 
-                        if(Str::contains($key, 'PROPERTY_')) {
+                                $field = $productFields->where('code', $key);
+                                $field = $field->first(function ($field) {
+                                    return $field;
+                                });
 
-                            $field = $productFields->where('code', $key);
-                            $field = $field->first(function ($field) {
-                                return $field;
-                            });
+                                if(is_object($value) && is_array($field['value'])) {
+                                    $productFieldValue = $field['value'][$value->value]['VALUE'];
+                                } else if(is_object($value)) {
+                                    $productFieldValue = $value->value;
+                                } else if(is_null($value)) {
+                                    $productFieldValue = null;
+                                } else {
+                                    $productFieldValue = $field['value'];
+                                }
 
-                            if(is_object($value) && is_array($field['value'])) {
-                                $productFieldValue = $field['value'][$value->value]['VALUE'];
-                            } else if(is_object($value)) {
-                                $productFieldValue = $value->value;
-                            } else if(is_null($value)) {
-                                $productFieldValue = null;
-                            } else {
-                                $productFieldValue = $field['value'];
+                                $fields[] = [
+                                    'bitrix_code' => $key,
+                                    'title' => $field['title'],
+                                    'value' => $productFieldValue,
+                                ];
+
                             }
-
-                            $fields[] = [
-                                'bitrix_code' => $key,
-                                'title' => $field['title'],
-                                'value' => $productFieldValue,
-                            ];
 
                         }
 
+                        $localProduct = Product::updateOrCreate([
+                            'integration' => $integration->id,
+                            'bitrix_id' => $product->ID,
+                        ], [
+                            'name' => $product->NAME,
+                            'code' => $product->CODE,
+                            'active' => $product->ACTIVE,
+                            'preview_picture' => $product->PREVIEW_PICTURE,
+                            'detail_picture' => $product->DETAIL_PICTURE,
+                            'sort' => $product->SORT,
+                            'xml_id' => $product->XML_ID,
+                            'timestamp_x' => $product->TIMESTAMP_X,
+                            'date_create' => $product->DATE_CREATE,
+                            'modified_by' => $product->MODIFIED_BY,
+                            'created_by' => $product->CREATED_BY,
+                            'catalog_id' => $product->CATALOG_ID,
+                            'section_id' => $product->SECTION_ID,
+                            'description' => $product->DESCRIPTION,
+                            'description_type' => $product->DESCRIPTION_TYPE,
+                            'price' => $product->PRICE,
+                            'currency_id' => $product->CURRENCY_ID,
+                            'vat_id' => $product->VAT_ID,
+                            'vat_included' => $product->VAT_INCLUDED,
+                            'measure' => $product->MEASURE,
+                            'fields' => $fields,
+                        ]);
+
+                        $this->log($counter." - ".$localProduct->id." - ".$product->NAME);
+                        $counter++;
                     }
 
-                    $localProduct = Product::updateOrCreate([
-                        'integration' => $integration->id,
-                        'bitrix_id' => $product->ID,
-                    ], [
-                        'name' => $product->NAME,
-                        'code' => $product->CODE,
-                        'active' => $product->ACTIVE,
-                        'preview_picture' => $product->PREVIEW_PICTURE,
-                        'detail_picture' => $product->DETAIL_PICTURE,
-                        'sort' => $product->SORT,
-                        'xml_id' => $product->XML_ID,
-                        'timestamp_x' => $product->TIMESTAMP_X,
-                        'date_create' => $product->DATE_CREATE,
-                        'modified_by' => $product->MODIFIED_BY,
-                        'created_by' => $product->CREATED_BY,
-                        'catalog_id' => $product->CATALOG_ID,
-                        'section_id' => $product->SECTION_ID,
-                        'description' => $product->DESCRIPTION,
-                        'description_type' => $product->DESCRIPTION_TYPE,
-                        'price' => $product->PRICE,
-                        'currency_id' => $product->CURRENCY_ID,
-                        'vat_id' => $product->VAT_ID,
-                        'vat_included' => $product->VAT_INCLUDED,
-                        'measure' => $product->MEASURE,
-                        'fields' => $fields,
-                    ]);
+                    $start = isset($productList->object()->next) ? $productList->object()->next : null;
 
-                    $this->log($counter." - ".$localProduct->id." - ".$product->NAME);
-                    $counter++;
-                }
+                } while (isset($productList->object()->next));
 
-                $start = isset($productList->object()->next) ? $productList->object()->next : null;
-
-            } while (isset($productList->object()->next));
-
+            }
         }
-
     }
 
     public function log(string $message) {

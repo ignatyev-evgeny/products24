@@ -6,6 +6,7 @@ use App\Models\Deals;
 use App\Models\Integration;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class UpdateDealList extends Command
 {
@@ -14,7 +15,7 @@ class UpdateDealList extends Command
      *
      * @var string
      */
-    protected $signature = 'product:update-deal-list {integration}';
+    protected $signature = 'product:update-deal-list';
 
     /**
      * The console command description.
@@ -33,54 +34,53 @@ class UpdateDealList extends Command
      */
     public function handle()
     {
-        $integration = Integration::find($this->argument('integration'));
 
-        if(empty($integration)) {
-            $this->errorMessage("Интеграция не найдена");
-            return false;
-        }
+        foreach(Integration::all() as $integration) {
 
-        $counter = 1;
+            $counter = 1;
 
-        $start = 0;
+            $start = 0;
 
 
-        do {
+            do {
 
-            $dealsList = Http::get("https://$integration->domain/rest/crm.deal.list?auth=$integration->auth_id&start=$start&filter[STAGE_ID]=WON&select[]=ID&select[]=TITLE&select[]=COMPANY_ID&select[]=CONTACT_ID");
+                $dealsList = Http::get("https://$integration->domain/rest/crm.deal.list?auth=$integration->auth_id&start=$start&order[ID]=DESC&filter[STAGE_ID]=WON&select[]=ID&select[]=TITLE&select[]=COMPANY_ID&select[]=CONTACT_ID");
 
-            if($dealsList->status() != 200 || empty($dealsList->object()->result)) {
-                $this->errorMessage("Ошибка соединения с порталом - ".$dealsList->status());
-                return false;
-            }
-
-            foreach ($dealsList->object()->result as $deal) {
-
-                $localDeal = Deals::firstOrCreate([
-                    'integration_id' => $integration->id,
-                    'bitrix_id' => $deal->ID,
-                    'title' => $deal->TITLE,
-                    'company_id' => $deal->COMPANY_ID,
-                    'contact_id' => $deal->CONTACT_ID,
-                ]);
-
-                if ($localDeal->wasRecentlyCreated) {
-                    $this->log($counter." - Успешно создана - ".$deal->ID." - ".$localDeal->bitrix_id);
-                } else {
-                    $this->log($counter." - Уже существует - ".$deal->ID." - ".$localDeal->bitrix_id);
+                if($dealsList->status() != 200 || empty($dealsList->object()->result)) {
+                    $this->errorMessage("Ошибка соединения с порталом - ".$dealsList->status());
+                    return false;
                 }
 
-                $counter++;
-            }
+                foreach ($dealsList->object()->result as $deal) {
 
-            $start = isset($dealsList->object()->next) ? $dealsList->object()->next : null;
+                    $localDeal = Deals::firstOrCreate([
+                        'integration_id' => $integration->id,
+                        'bitrix_id' => $deal->ID,
+                        'title' => $deal->TITLE,
+                        'company_id' => $deal->COMPANY_ID,
+                        'contact_id' => $deal->CONTACT_ID,
+                    ]);
 
-        } while (isset($dealsList->object()->next));
+                    if ($localDeal->wasRecentlyCreated) {
+                        $this->log($counter." - Успешно создана - ".$deal->ID." - ".$localDeal->bitrix_id);
+                    } else {
+                        $this->log($counter." - Уже существует - ".$deal->ID." - ".$localDeal->bitrix_id);
+                    }
+
+                    $counter++;
+                }
+
+                $start = isset($dealsList->object()->next) ? $dealsList->object()->next : null;
+
+            } while (isset($dealsList->object()->next));
+
+        }
 
     }
 
     public function log(string $message) {
         $this->info($message);
+        Log::channel('UpdateDealList')->info($message);
     }
 
     public function errorMessage(string $message): void {
