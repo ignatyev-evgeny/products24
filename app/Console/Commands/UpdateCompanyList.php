@@ -68,7 +68,7 @@ class UpdateCompanyList extends Command
                 }
 
                 $start = isset($companyList->object()->next) ? $companyList->object()->next : null;
-
+                sleep(1);
             } while (isset($companyList->object()->next));
 
         }

@@ -71,7 +71,7 @@ class UpdateDealList extends Command
                 }
 
                 $start = isset($dealsList->object()->next) ? $dealsList->object()->next : null;
-
+                sleep(1);
             } while (isset($dealsList->object()->next));
 
         }

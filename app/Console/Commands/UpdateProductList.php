@@ -147,7 +147,7 @@ class UpdateProductList extends Command
                     }
 
                     $start = isset($productList->object()->next) ? $productList->object()->next : null;
-
+                    sleep(1);
                 } while (isset($productList->object()->next));
 
             }

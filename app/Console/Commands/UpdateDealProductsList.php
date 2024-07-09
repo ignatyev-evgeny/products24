@@ -90,6 +90,7 @@ class UpdateDealProductsList extends Command
                 };
                 $this->log($counter." - Синхронизация товарных позиций сделки - ".$deal->bitrix_id.". Прошла успешно.");
                 $counter++;
+                sleep(1);
             }
 
         }
