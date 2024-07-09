@@ -52,7 +52,8 @@ class UpdateDealProductsList extends Command
                 $dealProductItemList = Http::get("https://$integration->domain/rest/crm.item.productrow.list?auth=$integration->auth_id&filter[%3DownerType]=D&filter[%3DownerId]=".$deal->bitrix_id);
 
                 if($dealProductItemList->status() != 200 || empty($dealProductItemList->object()->result)) {
-                    $this->errorMessage("Ошибка соединения с порталом - ".$dealProductItemList->status());
+                    $errorDescription = !empty($dealProductItemList->object()->error_description) ? "[".$dealProductItemList->object()->error_description."]" : '';
+                    $this->errorMessage("Ошибка соединения с порталом $errorDescription - ".$dealProductItemList->status());
                     continue;
                 }
 
@@ -74,7 +75,8 @@ class UpdateDealProductsList extends Command
                     $productVariation = Http::get("https://$integration->domain/rest/catalog.product.offer.get?auth=$integration->auth_id&id=".$productRow->productId);
 
                     if($productVariation->status() != 200 || empty($productVariation->object()->result)) {
-                        $this->errorMessage("Ошибка соединения с порталом - ".$productVariation->status());
+                        $errorDescription = !empty($productVariation->object()->error_description) ? "[".$productVariation->object()->error_description."]" : '';
+                        $this->errorMessage("Ошибка соединения с порталом $errorDescription - ".$productVariation->status());
                         continue;
                     }
 
@@ -89,7 +91,8 @@ class UpdateDealProductsList extends Command
                     $productDetail = Http::get("https://$integration->domain/rest/crm.product.get?auth=$integration->auth_id&id=".$productVariation->offer->parentId->value);
 
                     if($productDetail->status() != 200 || empty($productDetail->object()->result)) {
-                        $this->errorMessage("Ошибка соединения с порталом - ".$productDetail->status());
+                        $errorDescription = !empty($productDetail->object()->error_description) ? "[".$productDetail->object()->error_description."]" : '';
+                        $this->errorMessage("Ошибка соединения с порталом $errorDescription - ".$productDetail->status());
                         continue;
                     }
 
@@ -163,12 +166,11 @@ class UpdateDealProductsList extends Command
 
                     }
 
-
                 };
                 $this->log($counter." - Синхронизация товарных позиций сделки - ".$deal->bitrix_id.". Прошла успешно.");
                 $counter++;
             }
-
+            sleep(1);
         }
 
     }
