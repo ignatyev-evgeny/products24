@@ -12,7 +12,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command(UpdateProductList::class)->hourly();
 Schedule::command(UpdateCompanyList::class)->everyFifteenMinutes();
+Schedule::command(UpdateDealList::class)->everyFifteenMinutes();
+Schedule::command(UpdateProductList::class)->hourly();
 Schedule::command(UpdateDealProductsList::class)->hourly();
-Schedule::command(UpdateDealList::class)->everyFiveSeconds();
