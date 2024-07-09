@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Integration;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\Deals;
 use App\Models\Integration;
 use App\Models\Product;
@@ -164,9 +165,18 @@ class ProductController extends Controller {
             ], 400);
         }
 
-        $deal = Deals::where('bitrix_id', $request->dealId)->first();
+        $dealInfo = Http::get("https://$integration->domain/rest/crm.deal.get?id=".$request->dealId."&auth=$integration->auth_id");
 
-        if(empty($deal->company_id)) {
+        if($dealInfo->status() != 200 || empty($dealInfo->object()->result->COMPANY_ID)) {
+            return [
+                'success' => false,
+                'message' => __("Ошибка соединения с порталом <b>$integration->domain</b>")
+            ];
+        }
+
+        $company = Company::where('bitrix_id', $dealInfo->object()->result->COMPANY_ID)->first();
+
+        if(empty($company)) {
             return response()->json([
                 'success' => false,
                 'message' => __("Компания указанная в сделке не найдена")
@@ -175,7 +185,7 @@ class ProductController extends Controller {
 
         $productItem = ProductItem::query()->select('integration_id', 'company_id', 'deal_id', 'bitrix_id', 'productId', 'productName', 'price', 'priceAccount', 'priceExclusive', 'priceNetto', 'priceBrutto', 'quantity', 'discountTypeId', 'discountRate', 'discountSum', 'taxRate', 'taxIncluded', 'customized', 'measureCode', 'measureName', 'type')
             ->where('integration_id', $integration->id)
-            ->where('company_id', $deal->company_id)
+            ->where('company_id', $company->bitrix_id)
             ->orderBy('deal_id', 'DESC');
 
         return DataTables::of($productItem)
@@ -299,13 +309,16 @@ class ProductController extends Controller {
 
     public static function refreshIntegration(Integration $integration, array $validatedData)
     {
-        $integration->auth_id = $validatedData['AUTH_ID'];
-        $integration->refresh_id = $validatedData['REFRESH_ID'];
-        $integration->expire = $validatedData['AUTH_EXPIRES'];
-        $integration->save();
-
-        return true;
-
+        try {
+            $integration->auth_id = $validatedData['AUTH_ID'];
+            $integration->refresh_id = $validatedData['REFRESH_ID'];
+            $integration->expire = $validatedData['AUTH_EXPIRES'];
+            $integration->save();
+            return true;
+        } catch (\Exception $exception) {
+            report($exception);
+            return false;
+        }
     }
 
     public static function getProductFields(Integration $integration): array {
