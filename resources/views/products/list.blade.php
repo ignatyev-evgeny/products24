@@ -115,12 +115,15 @@
                         "quantity": count
                     }
                 }, function(result) {
-                    if(result.status !== 200) {
+
+                    if(result.error()) {
                         button.removeClass("disabled").removeClass("btn-success").addClass("btn-danger").html("Ошибка");
-                        return false;
+                        alert("{{ __("Ошибка при добавлении товара") }}" + result.error());
+                    } else {
+                        button.removeClass("disabled").removeClass("btn-danger").addClass("btn-success").html("Добавить");
+                        alert("{{ __("Товар успешно добавлен") }}");
                     }
-                    button.removeClass("disabled").removeClass("btn-danger").addClass("btn-success").html("Добавить");
-                    alert("{{ __("Товар успешно добавлен") }}");
+
                 });
 
             }
