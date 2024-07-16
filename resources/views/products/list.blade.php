@@ -81,7 +81,7 @@
 
             function addProductToDeal(productId, dealId) {
                 var count = $('#count_'+productId).val();
-                var price = $('#price_'+productItemId).val();
+                var price = $('#price_'+productId).val();
 
                 if (typeof count === 'undefined' || count === null || count === '') {
                     alert("{{ __("Не указано количество продукции") }}")
@@ -89,8 +89,7 @@
                 }
 
                 if (typeof price === 'undefined' || price === null || price === '') {
-                    alert("{{ __("Не указана стоимость продукции") }}")
-                    return false;
+                    price = 0;
                 }
 
                 if (typeof productId === 'undefined' || productId === null || productId === '') {
