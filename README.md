@@ -1,66 +1,307 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Products24 - Bitrix24 Product Integration
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Products24 - это Laravel-приложение для интеграции с Bitrix24, предназначенное для управления товарами, товарными позициями и сделками.
 
-## About Laravel
+## Описание
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Приложение предоставляет веб-интерфейс для работы с продуктами из каталога Bitrix24, позволяя:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Просматривать и фильтровать товары
+- Управлять товарными позициями в сделках
+- Добавлять товары в сделки непосредственно из интерфейса
+- Синхронизировать данные с порталом Bitrix24
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Основные возможности
 
-## Learning Laravel
+### 🔄 Синхронизация данных
+- Автоматическое обновление списка компаний
+- Синхронизация успешных сделок
+- Обновление каталога товаров
+- Синхронизация товарных позиций в сделках
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 📦 Управление товарами
+- Просмотр товаров с фильтрацией
+- Отображение артикулов и аналогов
+- Управление ценами и количеством
+- Добавление товаров в сделки
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 🎯 Интеграция с Bitrix24
+- OAuth авторизация с порталом
+- API для работы с CRM
+- Автоматическое обновление токенов
+- Поддержка множественных интеграций
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Требования
 
-## Laravel Sponsors
+- PHP 8.2+
+- Laravel 11.x
+- SQLite (по умолчанию) или PostgreSQL/MySQL
+- Composer
+- Node.js и NPM (для фронтенда)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Установка
 
-### Premium Partners
+### 1. Клонирование репозитория
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```bash
+git clone <repository-url>
+cd Products24
+```
 
-## Contributing
+### 2. Установка зависимостей
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+# PHP зависимости
+composer install
 
-## Code of Conduct
+# JavaScript зависимости
+npm install
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 3. Настройка окружения
 
-## Security Vulnerabilities
+```bash
+# Копирование файла конфигурации
+cp .env.example .env
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Генерация ключа приложения
+php artisan key:generate
+```
 
-## License
+### 4. Настройка базы данных
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+# Создание файла базы данных SQLite (если используется SQLite)
+touch database/database.sqlite
+
+# Выполнение миграций
+php artisan migrate
+```
+
+### 5. Сборка фронтенда
+
+```bash
+npm run build
+```
+
+## Конфигурация
+
+### Основные настройки в .env
+
+```env
+APP_NAME=Products24
+APP_ENV=local
+APP_KEY=your-app-key
+APP_DEBUG=true
+APP_URL=http://localhost
+
+# База данных
+DB_CONNECTION=sqlite
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=products24
+# DB_USERNAME=root
+# DB_PASSWORD=
+
+# Кэш
+CACHE_STORE=database
+RESPONSE_CACHE_ENABLED=true
+
+# Логирование
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+```
+
+## Использование
+
+### Запуск приложения
+
+```bash
+# Локальная разработка
+php artisan serve
+
+# Или с помощью Laravel Sail
+./vendor/bin/sail up
+```
+
+### Консольные команды
+
+Приложение включает несколько команд для синхронизации данных:
+
+```bash
+# Обновление списка компаний
+php artisan product:update-company-list
+
+# Обновление списка сделок
+php artisan product:update-deal-list
+
+# Обновление каталога товаров
+php artisan product:update-product-list
+
+# Обновление товарных позиций в сделках
+php artisan product:update-deal-item-list [update]
+```
+
+### Автоматическое выполнение команд
+
+Команды настроены на автоматическое выполнение через планировщик Laravel:
+
+- Обновление компаний и сделок: каждые 15 минут
+- Обновление товаров и товарных позиций: каждый час
+
+Для активации планировщика добавьте в cron:
+
+```bash
+* * * * * cd /path-to-your-project && php artisan schedule:run >> /dev/null 2>&1
+```
+
+## Структура проекта
+
+```
+app/
+├── Console/Commands/        # Консольные команды для синхронизации
+├── Http/Controllers/        # Контроллеры приложения
+├── Models/                  # Модели данных
+├── Helpers/                 # Вспомогательные функции
+└── Providers/              # Сервис-провайдеры
+
+resources/
+├── views/                  # Blade-шаблоны
+│   └── products/          # Страницы для работы с товарами
+└── js/                    # JavaScript файлы
+
+database/
+├── migrations/            # Миграции базы данных
+└── factories/            # Фабрики для тестовых данных
+
+routes/
+├── web.php               # Веб-маршруты
+└── console.php          # Консольные команды
+```
+
+## API Endpoints
+
+### Основные маршруты
+
+- `GET /` - Главная страница (товарные позиции)
+- `GET /product/list/{integration}/{deal}` - Список товаров
+- `GET /product/{integration}` - API для получения товаров (с кэшированием)
+- `GET /product-item/{integration}` - API для получения товарных позиций
+
+### Параметры API
+
+- `integration` - ID интеграции с Bitrix24
+- `deal` - ID сделки
+- `dealId` - ID сделки (query parameter)
+
+## Модели данных
+
+### Integration
+Хранит данные об интеграции с порталом Bitrix24:
+- `domain` - домен портала
+- `auth_id` - токен авторизации
+- `refresh_id` - токен обновления
+- `expire` - время истечения токена
+- `catalogs` - список каталогов
+
+### Product
+Товары из каталога Bitrix24:
+- `name` - название товара
+- `price` - цена
+- `fields` - дополнительные поля (JSON)
+
+### ProductItem
+Товарные позиции в сделках:
+- `productName` - название товара
+- `article` - артикул
+- `analogs` - аналоги
+- `price`, `quantity` - цена и количество
+- `discountRate` - размер скидки
+
+### Company, Deals
+Компании и сделки из Bitrix24 CRM.
+
+## Логирование
+
+Приложение ведет детальные логи:
+
+- `UpdateProductList.log` - логи обновления товаров
+- `UpdateDealList.log` - логи обновления сделок
+- `requestFromBitrix.log` - входящие запросы от Bitrix24
+
+Логи сохраняются в `storage/logs/{date}/` с группировкой по датам.
+
+## Кэширование
+
+Используется Response Cache для оптимизации:
+- Кэширование API ответов
+- Настраиваемое время жизни кэша
+- Автоматическая очистка при необходимости
+
+## Вспомогательные функции
+
+### `subtractPercentage($number, $percent)`
+Функция для расчета цены со скидкой:
+
+```php
+$finalPrice = subtractPercentage(1000, 10); // 900
+```
+
+## Безопасность
+
+- CSRF защита отключена для API endpoints
+- Валидация входящих данных от Bitrix24
+- Проверка токенов авторизации
+- Логирование всех операций
+
+## Разработка
+
+### Требования для разработки
+
+- PHPStorm/VS Code с поддержкой Laravel
+- Xdebug для отладки
+- Laravel Telescope (опционально)
+
+### Тестирование
+
+```bash
+# Запуск тестов
+php artisan test
+
+# Запуск с покрытием
+php artisan test --coverage
+```
+
+### Code Style
+
+Проект использует Laravel Pint для форматирования кода:
+
+```bash
+./vendor/bin/pint
+```
+
+## Deployment
+
+### Production настройки
+
+1. Установите `APP_ENV=production`
+2. Отключите `APP_DEBUG=false`
+3. Настройте очередь: `QUEUE_CONNECTION=redis`
+4. Используйте файловый кэш: `CACHE_STORE=file`
+5. Настройте веб-сервер (Nginx/Apache)
+
+### Оптимизация
+
+```bash
+# Кэширование конфигурации
+php artisan config:cache
+
+# Кэширование маршрутов
+php artisan route:cache
+
+# Кэширование представлений
+php artisan view:cache
+
+# Оптимизация автозагрузчика
+composer install --optimize-autoloader --no-dev
+```
